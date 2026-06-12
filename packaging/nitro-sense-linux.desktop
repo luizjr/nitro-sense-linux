@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Nitro Sense Linux
+Comment=NitroSense replacement for Acer Nitro AN515-58
+Exec=nitro-sense-linux
+Icon=nitro-sense-linux
+Terminal=false
+Categories=Utility;System;
+StartupNotify=true

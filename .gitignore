@@ -1,0 +1,19 @@
+node_modules
+dist
+src-tauri/target
+src-tauri/gen
+.env
+.DS_Store
+*.log
+tsconfig.tsbuildinfo
+
+# kernel module build artifacts (packaging/kbd-module)
+*.ko
+*.o
+*.mod
+*.mod.c
+*.mod.o
+.*.cmd
+Module.symvers
+modules.order
+.tmp_versions/

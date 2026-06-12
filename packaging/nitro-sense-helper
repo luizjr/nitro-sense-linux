@@ -1,0 +1,34 @@
+#!/bin/bash
+# Privileged helper: writes a single value to a single sysfs path.
+# Whitelisted via polkit (see com.nitrosenselinux.helper.policy).
+#
+# Usage: nitro-sense-helper <sysfs-path> <value>
+
+set -euo pipefail
+
+PATH_ARG="${1:-}"
+VALUE_ARG="${2:-}"
+
+if [[ -z "$PATH_ARG" || -z "$VALUE_ARG" ]]; then
+    echo "usage: $0 <sysfs-path> <value>" >&2
+    exit 2
+fi
+
+# Defense-in-depth: only allow writes to known-safe paths.
+case "$PATH_ARG" in
+    /sys/firmware/acpi/platform_profile) ;;
+    /sys/class/hwmon/hwmon*/pwm[12]) ;;
+    /sys/class/hwmon/hwmon*/pwm[12]_enable) ;;
+    *)
+        echo "refused: path '$PATH_ARG' not in allowlist" >&2
+        exit 3
+        ;;
+esac
+
+# And the value must be ASCII printable, no shell metachars.
+if [[ ! "$VALUE_ARG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "refused: value contains disallowed chars" >&2
+    exit 4
+fi
+
+printf '%s' "$VALUE_ARG" > "$PATH_ARG"

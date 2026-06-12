@@ -1,0 +1,30 @@
+# Nitro Sense Linux — direct sysfs write access for the desktop user.
+#
+# With these permissions the app writes fan PWM and the power profile directly,
+# so changing a profile (and the AC/Battery auto-switch) never pops a pkexec
+# password dialog. sysfs has no POSIX-ACL support, so we use the classic udev
+# idiom for sysfs attributes: chgrp + chmod g+w (same pattern distros use for
+# backlight/leds).
+#
+# Group "luizjr" below is the app user's PRIMARY group, which is always active
+# in every session — so no logout/reboot is needed for it to take effect.
+# If a different user runs the app, replace "luizjr" in all four lines.
+#
+# Install:
+#   sudo install -m 644 packaging/99-nitro-sense.rules /etc/udev/rules.d/99-nitro-sense.rules
+#   sudo udevadm control --reload
+#   sudo udevadm trigger -s hwmon -s platform-profile
+#
+# (the trigger applies it immediately; the rule re-applies on every boot)
+
+# --- Acer EC fans: pwm1/pwm2 and their *_enable toggles ---
+ACTION!="remove", SUBSYSTEM=="hwmon", ATTR{name}=="acer", \
+  RUN+="/usr/bin/chgrp luizjr /sys%p/pwm1 /sys%p/pwm1_enable /sys%p/pwm2 /sys%p/pwm2_enable", \
+  RUN+="/usr/bin/chmod g+w /sys%p/pwm1 /sys%p/pwm1_enable /sys%p/pwm2 /sys%p/pwm2_enable"
+
+# --- Power plan: platform_profile ---
+# The app writes the legacy firmware path; we also open the new class attribute
+# so either interface works.
+ACTION!="remove", SUBSYSTEM=="platform-profile", \
+  RUN+="/usr/bin/chgrp luizjr /sys/firmware/acpi/platform_profile /sys%p/profile", \
+  RUN+="/usr/bin/chmod g+w /sys/firmware/acpi/platform_profile /sys%p/profile"
