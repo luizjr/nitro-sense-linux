@@ -2,9 +2,9 @@ type Props = { rpm: number };
 
 const CX = 110;
 const CY = 110;
-const BLADE_COUNT = 44;
+const BLADE_COUNT = 60;
 const R_INNER = 66;
-const R_OUTER = 98;
+const R_OUTER = 96;
 
 // Pre-compute the static blade geometry once at module load.
 const BLADES = Array.from({ length: BLADE_COUNT }, (_, i) => {
@@ -35,7 +35,7 @@ export default function FanGauge({ rpm }: Props) {
             <stop offset="100%" stopColor="#070708" />
           </radialGradient>
           <filter id="redglow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3.5" result="b" />
+            <feGaussianBlur stdDeviation="2.4" result="b" />
             <feMerge>
               <feMergeNode in="b" />
               <feMergeNode in="SourceGraphic" />
@@ -50,8 +50,8 @@ export default function FanGauge({ rpm }: Props) {
           r={R_INNER + 2}
           fill="none"
           stroke="var(--accent)"
-          strokeWidth="2.5"
-          opacity="0.6"
+          strokeWidth="1.8"
+          opacity="0.42"
           filter="url(#redglow)"
         />
 
@@ -71,10 +71,10 @@ export default function FanGauge({ rpm }: Props) {
               y1={b.y1}
               x2={b.x2}
               y2={b.y2}
-              stroke="#9aa0a8"
-              strokeWidth="1.6"
+              stroke="#868c95"
+              strokeWidth="1.1"
               strokeLinecap="round"
-              opacity="0.85"
+              opacity="0.7"
             />
           ))}
         </g>

@@ -51,8 +51,7 @@ function Block({
   const max = history.length ? Math.max(...history) : null;
   return (
     <div>
-      <div className="mon-head">
-        <span>Temperature (°{unit}) / Loading (%)</span>
+      <div className="mon-head" style={{ justifyContent: "flex-end" }}>
         <span className="mon-minmax">
           Min: <b>{formatTemp(min, unit)}</b> &nbsp; Max: <b>{formatTemp(max, unit)}</b>
         </span>
@@ -80,6 +79,7 @@ export default function Monitoring() {
   const cpuHist = useRef<Series>([]);
   const gpuHist = useRef<Series>([]);
   const [, force] = useState(0);
+  const { unit } = useSettings();
 
   const tick = async () => {
     try {
@@ -115,6 +115,7 @@ export default function Monitoring() {
         <span className="panel-head">Monitoring</span>
       </div>
       <div className="panel-body">
+        <div className="mon-title">Temperature (°{unit}) / Loading (%)</div>
         <Block tag="CPU" temp={cpuTemp} load={cpuLoad} history={cpuHist.current} />
         <Block tag="GPU" temp={gpuTemp} load={gpuLoad} history={gpuHist.current} />
         {error && <div className="err">{error}</div>}

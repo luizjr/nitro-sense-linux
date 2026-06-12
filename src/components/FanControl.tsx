@@ -5,19 +5,54 @@ import FanGauge from "./FanGauge";
 type Mode = "auto" | "max" | "custom";
 
 function FanIcon({ kind }: { kind: Mode }) {
+  // Custom → sliders (matches the per-fan slider UI)
+  if (kind === "custom") {
+    return (
+      <svg
+        className="ico"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      >
+        <line x1="4" y1="8.5" x2="20" y2="8.5" />
+        <circle cx="9" cy="8.5" r="2.3" fill="var(--panel-2)" />
+        <line x1="4" y1="15.5" x2="20" y2="15.5" />
+        <circle cx="15" cy="15.5" r="2.3" fill="var(--panel-2)" />
+      </svg>
+    );
+  }
+  // Auto (outlined fan + "A") / Max (filled fan)
+  const filled = kind === "max";
+  const blades = [0, 120, 240].map((d) => (
+    <path
+      key={d}
+      d="M12 12 C 9.7 7.2, 10.6 4, 12 2.4 C 13.4 4, 14.3 7.2, 12 12 Z"
+      transform={`rotate(${d} 12 12)`}
+    />
+  ));
   return (
-    <svg className="ico" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="2.2" fill="currentColor" />
-      {[0, 90, 180, 270].map((d) => (
-        <path
-          key={d}
-          d="M12 10 C 14 7, 18 7, 19 4 C 16 6, 13 7, 12 10 Z"
-          fill="currentColor"
-          transform={`rotate(${d} 12 12)`}
-        />
-      ))}
+    <svg
+      className="ico"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinejoin="round"
+    >
+      <g>{blades}</g>
+      <circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none" />
       {kind === "auto" && (
-        <text x="12" y="15.5" textAnchor="middle" fontSize="7" fill="#0a0a0c" fontWeight="700">
+        <text
+          x="18.5"
+          y="8"
+          fontSize="9"
+          fontWeight="800"
+          fill="currentColor"
+          stroke="none"
+          textAnchor="middle"
+        >
           A
         </text>
       )}
