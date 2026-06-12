@@ -1,0 +1,109 @@
+name: Release (.deb)
+
+# Cria automaticamente uma Release do GitHub com o pacote .deb sempre que uma
+# nova tag de versão for enviada.
+#
+# Como lançar uma versão:
+#   git tag v0.2.0
+#   git push origin v0.2.0
+#
+# A versão da tag (sem o "v") é injetada em tauri.conf.json, Cargo.toml e
+# package.json antes do build, então o .deb sai nomeado com a versão correta
+# (ex.: nitro-sense-linux_0.2.0_amd64.deb) sem precisar editar os manifestos
+# manualmente a cada release.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Garante apenas um build por tag rodando de cada vez.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # necessário para criar a Release e anexar o .deb
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-22.04 # base estável (glibc 2.35) — .deb compatível com Ubuntu 22.04+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9 # pnpm-lock.yaml é lockfileVersion 9.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install system dependencies (Tauri 2)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            libxdo-dev \
+            build-essential curl wget file patchelf
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tag $TAG -> version $VERSION"
+
+      - name: Sync version into manifests
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # tauri.conf.json (define o nome final do .deb)
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          # package.json
+          jq --arg v "$VERSION" '.version = $v' package.json > package.json.tmp
+          mv package.json.tmp package.json
+          # Cargo.toml — apenas o version= do [package] (primeira ocorrência)
+          sed -i "0,/^version = \".*\"/s//version = \"$VERSION\"/" src-tauri/Cargo.toml
+          echo "tauri.conf.json: $(jq -r .version src-tauri/tauri.conf.json)"
+          grep -m1 '^version = ' src-tauri/Cargo.toml
+
+      - name: Build .deb and publish Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Nitro Sense Linux ${{ github.ref_name }}'
+          releaseBody: |
+            Pacote `.deb` para Ubuntu/Debian (amd64), gerado automaticamente a partir da tag `${{ github.ref_name }}`.
+
+            ### Instalação
+            ```bash
+            sudo apt install ./nitro-sense-linux_${{ steps.version.outputs.version }}_amd64.deb
+            ```
+          releaseDraft: false
+          prerelease: false
+          args: '--bundles deb'
