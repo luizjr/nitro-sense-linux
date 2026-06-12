@@ -66,6 +66,7 @@ pub fn run() {
             commands::audio::audio_disable,
             commands::autostart::get_autostart,
             commands::autostart::set_autostart,
+            commands::system::system_support,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

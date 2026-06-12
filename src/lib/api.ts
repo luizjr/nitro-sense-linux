@@ -27,6 +27,16 @@ export type GpuStatus = {
 
 export type HistoryPoint = { t: number; percent: number };
 
+export type SystemSupport = {
+  supported: boolean;
+  vendor: string;
+  product: string;
+  is_acer: boolean;
+  is_laptop: boolean;
+  has_acer_hwmon: boolean;
+  has_platform_profile: boolean;
+};
+
 export type BatteryStatus = {
   present: boolean;
   model: string | null;
@@ -68,6 +78,8 @@ export const api = {
 
   getAutostart: () => invoke<boolean>("get_autostart"),
   setAutostart: (enabled: boolean) => invoke<void>("set_autostart", { enabled }),
+
+  systemSupport: () => invoke<SystemSupport>("system_support"),
 };
 
 export type AudioStatus = {
