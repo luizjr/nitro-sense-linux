@@ -5,3 +5,4 @@ pub mod gpu;
 pub mod battery;
 pub mod audio;
 pub mod autostart;
+pub mod system;
